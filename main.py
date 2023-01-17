@@ -14,14 +14,15 @@ model = cv2.dnn.readNetFromONNX('resnet50-v2-7.onnx')
 
 
 while True:
+    start = time.time()
     image = picam2.capture_image("main")
 
     # 1 1080p x4channels (1920,1080,4)
     open_cv_image = numpy.array(image) 
-    # 2 1080p RGB (1920, 1080, 3)
+    # Ignore alpha
     open_cv_image = open_cv_image[:, :, :3].copy() 
     print(open_cv_image.shape)
-    # crop
+    # Crop
     # Take the closest lower integer division resolution
     width = open_cv_image.shape[1]
     height = open_cv_image.shape[0]
@@ -72,6 +73,8 @@ while True:
         cv2.putText(cv_blob_image, out_text, (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         cv2.imwrite('./0/' + str(i) + '.jpg', cv_blob_image)
 
+    end = time.time()
+    print("Seconds per frame: " + str(end-start))
     '''
     for i in range(tiled_array.shape[0]):
         model.setInput(tiled_array[i])
