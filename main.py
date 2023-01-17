@@ -10,24 +10,27 @@ picam2.configure(config)
 picam2.start()
 time.sleep(1)
 
+#faster
+#model = cv2.dnn.readNetFromONNX('mobilenetv2-7.onnx')
+#slower
 model = cv2.dnn.readNetFromONNX('resnet50-v2-7.onnx')
 
 
 while True:
+    gradual_timer = time.time()
     start = time.time()
     image = picam2.capture_image("main")
 
     # 1 1080p x4channels (1920,1080,4)
     open_cv_image = numpy.array(image) 
     # Ignore alpha
-    open_cv_image = open_cv_image[:, :, :3].copy() 
-    print(open_cv_image.shape)
-    # Crop
+    open_cv_image = open_cv_image[:, :, :3].copy()
     # Take the closest lower integer division resolution
-    width = open_cv_image.shape[1]
-    height = open_cv_image.shape[0]
+    #width = open_cv_image.shape[1]
+    #height = open_cv_image.shape[0]
+    width = 1920
+    height = 1080
     open_cv_image = open_cv_image[0:(224 * math.floor(height/224)), 0:(224 * math.floor(width/224))]
-    print(open_cv_image.shape)
     # tiling (224,224,3, x) - x je pocet tilov
     #tiles = open_cv_image.reshape(224,224,3,64)
     #print(tiles.shape)
@@ -35,24 +38,22 @@ while True:
     tiled_array = tiled_array.swapaxes(1,2)
     tiled_array = tiled_array.reshape(-1,224,224, 3)
     #tiled_array = numpy.moveaxis(tiled_array, 3, 1)
-    print(tiled_array.shape)
+    #print("Finished reshaping: ", time.time() - start)
 
     #cv2.imwrite('test.png', tiled_array)
     #cv_blob_image = cv2.imread('test.png')
     blob = cv2.dnn.blobFromImages(images=tiled_array, scalefactor=0.01, size=(56, 56), mean=(104, 117, 123))
-    print(blob.shape)
-
+    #print("Finished blobbing: ", time.time() - start)
 
     model.setInput(blob)
     outputs = model.forward()
-    print(outputs.shape)
+    print("Finished model output: ", time.time() - start)
 
     # read the ImageNet class names
     with open('synset.txt', 'r') as f:
         image_net_names = f.read().split('\n')
     # final class names (just the first word of the many ImageNet names for one image)
     class_names = [name.split(',')[0] for name in image_net_names]
-
 
     for i in range(outputs.shape[0]):
         final_outputs = outputs[i]
@@ -64,15 +65,13 @@ while True:
         probs = numpy.exp(final_outputs) / numpy.sum(numpy.exp(final_outputs))
         # get the final highest probability
         final_prob = numpy.max(probs) * 100.
-        cv2.imwrite('./tiles/result_image' + str(i) + '.jpg', tiled_array[i])
-        cv_blob_image = cv2.imread('./tiles/result_image' + str(i) + '.jpg')
         # map the max confidence to the class label names
         out_name = class_names[label_id]
         out_text = f"{out_name}, {final_prob:.3f}"
         # put the class name text on top of the image
-        cv2.putText(cv_blob_image, out_text, (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        cv2.imwrite('./0/' + str(i) + '.jpg', cv_blob_image)
-
+        cv2.putText(tiled_array[i], out_text, (25, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        cv2.imwrite('./0/' + str(i) + '.jpg', tiled_array[i])
+    #print("Finished looping through and labeling images: ", time.time() - start)
     end = time.time()
     print("Seconds per frame: " + str(end-start))
     '''

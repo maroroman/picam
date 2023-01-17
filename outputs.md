@@ -49,3 +49,6 @@ Finally The output is taken and class names are assigned based on the model oupu
 6. Resnet onnx file was retrieved along with its synset
 7. For classification the following tutorial was used: https://learnopencv.com/deep-learning-with-opencvs-dnn-module-a-definitive-guide/#guide-to-image-classification
 8. Tile re-stitching was attempted but aborted due to time constraints
+9. Switched model to MobileNet, reaching speeds about 5 times faster per frame.
+10. Discovered that printing shape significantly slows down the entire process, speeding up the program
+11. Optimizing the writing function gained about 0.2 seconds
