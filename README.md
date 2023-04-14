@@ -1,3 +1,6 @@
+# Picam
+Using OpenCV for image processing on a raspberry pi camera
+
 ## Goal
 Implement classification of items in video tiles captured by a raspberry pi camera
 
